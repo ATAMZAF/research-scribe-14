@@ -1,24 +1,106 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TopBar } from "@/components/research/TopBar";
+import { Sidebar } from "@/components/research/Sidebar";
+import { ResearchPanel } from "@/components/research/ResearchPanel";
+import { SourcesTab } from "@/components/research/SourcesTab";
+import { NotesEditor } from "@/components/research/NotesEditor";
+import { CitationPanel } from "@/components/research/CitationPanel";
+import { SourceViewer } from "@/components/research/SourceViewer";
+import { WorkspaceProvider, useWorkspace } from "@/state/workspace";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const title = "Marginalia — Local Research Notebook";
+const description =
+  "A local-first academic research workspace: organize sources, ask questions across a notebook, and keep cited findings and notes together.";
+
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+    ],
+  }),
+  component: Page,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Page() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <TooltipProvider delayDuration={200}>
+      <WorkspaceProvider>
+        <Workspace />
+      </WorkspaceProvider>
+    </TooltipProvider>
+  );
+}
+
+function Workspace() {
+  const { notebook, scopeLabel, activeCitation } = useWorkspace();
+  const [drawer, setDrawer] = useState(false);
+
+  return (
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      <TopBar onOpenSidebar={() => setDrawer(true)} />
+
+      <div className="flex min-h-0 flex-1">
+        <aside className="hidden w-72 shrink-0 border-r border-border lg:block xl:w-80">
+          <Sidebar />
+        </aside>
+
+        <Sheet open={drawer} onOpenChange={setDrawer}>
+          <SheetContent side="left" className="w-80 p-0">
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
+
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-4xl px-5 py-6 lg:px-8">
+            <h1 className="text-2xl font-semibold tracking-tight text-balance">{notebook.name}</h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+              {notebook.description}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {notebook.sources.length} sources · {notebook.updatedLabel} · Scope: {scopeLabel}
+            </p>
+
+            <Tabs defaultValue="research" className="mt-6">
+              <TabsList className="bg-surface-strong">
+                <TabsTrigger value="research">Research</TabsTrigger>
+                <TabsTrigger value="sources">Sources</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="research" className="mt-5">
+                <ResearchPanel />
+              </TabsContent>
+              <TabsContent value="sources" className="mt-5">
+                <SourcesTab />
+              </TabsContent>
+              <TabsContent value="notes" className="mt-5 min-h-[28rem]">
+                <NotesEditor />
+              </TabsContent>
+            </Tabs>
+
+            <p className="mt-10 border-t border-border pt-4 text-[11px] leading-relaxed text-muted-foreground">
+              Demonstration data: the notebooks, documents and answers shown here are fictional
+              placeholders, not real publications. Responses are generated locally from mock data.
+            </p>
+          </div>
+        </main>
+
+        {activeCitation && <CitationPanel />}
+      </div>
+
+      <footer className="flex h-9 shrink-0 items-center justify-between border-t border-border bg-card px-4 text-[11px] text-muted-foreground">
+        <span>{scopeLabel} in scope</span>
+        <span>Local-first · No cloud services connected</span>
+      </footer>
+
+      <SourceViewer />
     </div>
   );
 }
