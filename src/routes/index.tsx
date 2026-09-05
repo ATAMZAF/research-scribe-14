@@ -84,11 +84,6 @@ function Workspace() {
                 <NotesEditor />
               </TabsContent>
             </Tabs>
-
-            <p className="mt-10 border-t border-border pt-4 text-[11px] leading-relaxed text-muted-foreground">
-              Demonstration data: the notebooks, documents and answers shown here are fictional
-              placeholders, not real publications. Responses are generated locally from mock data.
-            </p>
           </div>
         </main>
 
