@@ -79,7 +79,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<WorkspaceValue["activeCitation"]>(null);
 
-  const notebook = notebooks.find((n) => n.id === notebookId) ?? notebooks[0];
+  const notebook = notebooks.find((n) => n.id === notebookId) ?? notebooks[0] ?? initialNotebook;
 
   const patch = useCallback(
     (fn: (nb: Notebook) => Notebook) =>
