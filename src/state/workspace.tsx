@@ -5,14 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  type CitationRef,
-  type Note,
-  type Notebook,
-  type ResearchEntry,
-  type Source,
-  type SourceKind,
-} from "@/data/mock";
+import { type Note, type Notebook, type Source } from "@/data/mock";
 import { askResearchQuestion } from "@/services/research-service";
 import { WorkspaceContext, type Scope, type WorkspaceValue } from "./workspace-context";
 
