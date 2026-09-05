@@ -34,10 +34,10 @@ export function ResearchPanel() {
       {history.length === 0 && !pendingQuestion ? (
         <div className="rounded-lg border border-dashed border-border px-6 py-16 text-center">
           <Sparkles className="mx-auto size-6 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium">No research yet in this notebook</p>
+          <p className="mt-3 text-sm font-medium">Start your research</p>
           <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
             {notebook.sources.length === 0
-              ? "Add sources to the notebook, then ask a research question."
+              ? "Add sources to this notebook, then ask a question about them."
               : "Ask a question above, or start with one of the research actions."}
           </p>
         </div>
