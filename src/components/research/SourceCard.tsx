@@ -62,7 +62,10 @@ export function SourceCard({ source, dense = false }: { source: Source; dense?: 
           <DropdownMenuItem onSelect={() => toggleSource(source.id)}>
             <CheckSquare className="size-4" /> {selected ? "Deselect" : "Select"}
           </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onSelect={() => removeSource(source.id)}>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => removeSource(source.id)}
+          >
             <Trash2 className="size-4" /> Remove
           </DropdownMenuItem>
         </DropdownMenuContent>

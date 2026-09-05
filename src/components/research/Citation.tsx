@@ -9,7 +9,7 @@ export function Citation({
 }: {
   index: number;
   citation: CitationRef;
-  source?: Source;
+  source: Source | undefined;
 }) {
   const { setActiveCitation } = useWorkspace();
   if (!source) return <sup className="text-muted-foreground">[{index}]</sup>;
