@@ -1,8 +1,8 @@
 /**
- * DEMONSTRATION DATA ONLY.
- * The notebooks, documents, authors and excerpts below are fictional and are
- * used purely to populate the interface before a local AI backend exists.
- * Nothing here should be treated as a real scientific publication.
+ * Core domain types and static research-action definitions.
+ * The application ships with no preloaded notebooks, sources, or research
+ * history — all content comes from the user (uploads, notes) or, later,
+ * from a locally connected model via the research service.
  */
 
 export type SourceKind = "pdf" | "txt" | "docx" | "csv";
