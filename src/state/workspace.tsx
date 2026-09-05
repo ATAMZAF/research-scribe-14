@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  mockNotebooks,
   type CitationRef,
   type Note,
   type Notebook,
@@ -56,9 +55,22 @@ interface WorkspaceValue {
 
 const Ctx = createContext<WorkspaceValue | null>(null);
 
+const blankNotebook = (): Notebook => ({
+  id: crypto.randomUUID(),
+  name: "My first notebook",
+  icon: "📓",
+  description: "Add sources and start asking research questions.",
+  updatedLabel: "Updated just now",
+  sources: [],
+  history: [],
+  notes: [],
+});
+
+const initialNotebook = blankNotebook();
+
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [notebooks, setNotebooks] = useState<Notebook[]>(mockNotebooks);
-  const [notebookId, setNotebookId] = useState(mockNotebooks[0].id);
+  const [notebooks, setNotebooks] = useState<Notebook[]>([initialNotebook]);
+  const [notebookId, setNotebookId] = useState(initialNotebook.id);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scope, setScope] = useState<Scope>("all");
   const [openSource, setOpenSource] = useState<Source | null>(null);
@@ -67,7 +79,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<WorkspaceValue["activeCitation"]>(null);
 
-  const notebook = notebooks.find((n) => n.id === notebookId) ?? notebooks[0];
+  const notebook = notebooks.find((n) => n.id === notebookId) ?? notebooks[0] ?? initialNotebook;
 
   const patch = useCallback(
     (fn: (nb: Notebook) => Notebook) =>
