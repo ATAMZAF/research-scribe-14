@@ -12,8 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { getResearchService } from "@/services/research-service";
+import {
+  emptyZoteroSettings,
+  loadZoteroSettings,
+  saveZoteroSettings,
+  type ZoteroSettings,
+} from "@/lib/zotero-settings";
 
 type Theme = "light" | "dark";
 
@@ -34,6 +46,22 @@ function useTheme() {
 
 export function Settings() {
   const { theme, setTheme } = useTheme();
+  const [zotero, setZotero] = useState<ZoteroSettings>(emptyZoteroSettings);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setZotero(loadZoteroSettings());
+  }, []);
+
+  const save = () => {
+    saveZoteroSettings({
+      libraryType: zotero.libraryType,
+      libraryId: zotero.libraryId.trim(),
+      apiKey: zotero.apiKey.trim(),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <Dialog>
@@ -46,7 +74,7 @@ export function Settings() {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            Preferences are stored on this device. Nothing is sent to a cloud service.
+            Preferences and library credentials are stored on this device.
           </DialogDescription>
         </DialogHeader>
 
@@ -72,23 +100,56 @@ export function Settings() {
 
         <Separator />
 
-        <div className="space-y-2">
-          <Label htmlFor="model-endpoint">Local model endpoint</Label>
-          <Input id="model-endpoint" placeholder="http://localhost:11434" disabled />
-          <p className="text-xs text-muted-foreground">
-            Active provider:{" "}
-            <span className="font-mono">{getResearchService().name}</span>. Answers are generated
-            from demonstration data until a local model runtime is connected.
-          </p>
+        <div className="space-y-3">
+          <div>
+            <Label>Zotero library</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Create a key at zotero.org/settings/keys, then enter your user ID or group ID.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Select
+              value={zotero.libraryType}
+              onValueChange={(v) =>
+                setZotero((z) => ({ ...z, libraryType: v as ZoteroSettings["libraryType"] }))
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="group">Group</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              value={zotero.libraryId}
+              onChange={(e) => setZotero((z) => ({ ...z, libraryId: e.target.value }))}
+              placeholder="Library ID (e.g. 123456)"
+            />
+          </div>
+          <Input
+            type="password"
+            value={zotero.apiKey}
+            onChange={(e) => setZotero((z) => ({ ...z, apiKey: e.target.value }))}
+            placeholder="Zotero API key"
+          />
+          <div className="flex items-center gap-3">
+            <Button size="sm" onClick={save}>
+              Save Zotero settings
+            </Button>
+            {saved && <span className="text-xs text-muted-foreground">Saved</span>}
+          </div>
         </div>
 
         <Separator />
 
         <div className="space-y-1">
-          <Label>Privacy</Label>
+          <Label>Research model</Label>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            This workspace is designed to run locally. Documents, questions and notes stay in the
-            browser session and are never uploaded.
+            Questions are answered by Google Gemini, using passages from the sources you have in
+            scope. Notes and documents stay in this workspace; only the passages needed to answer a
+            question are sent to the model.
           </p>
         </div>
       </DialogContent>

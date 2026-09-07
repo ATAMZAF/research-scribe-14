@@ -30,8 +30,8 @@ export function TopBar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
       </p>
       <div className="ml-auto flex items-center gap-1">
         <span className="mr-1 hidden items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground md:flex">
-          <span className="size-1.5 rounded-full bg-muted-foreground/50" />
-          Local model not connected
+          <span className="size-1.5 rounded-full bg-primary" />
+          Gemini
         </span>
         <Settings />
         <Avatar className="size-7">
