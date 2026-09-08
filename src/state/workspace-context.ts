@@ -33,6 +33,7 @@ export interface WorkspaceValue {
   setActiveCitation: (c: { citation: CitationRef; source: Source; index: number } | null) => void;
 
   addSources: (files: { name: string; kind: SourceKind }[]) => void;
+  addSourceObjects: (sources: Source[]) => void;
   saveNote: (note: Note) => void;
   deleteNote: (id: string) => void;
   removeSource: (id: string) => void;

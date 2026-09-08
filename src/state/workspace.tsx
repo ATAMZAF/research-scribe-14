@@ -153,6 +153,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           })),
         ],
       })),
+    addSourceObjects: (incoming) =>
+      patch((nb) => ({
+        ...nb,
+        sources: [
+          ...nb.sources,
+          ...incoming.filter((s) => !nb.sources.some((existing) => existing.id === s.id)),
+        ],
+      })),
     saveNote: (note) =>
       patch((nb) => ({
         ...nb,
