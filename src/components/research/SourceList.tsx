@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus, X, Library } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SourceCard } from "./SourceCard";
 import { UploadDialog } from "./UploadDialog";
+import { ZoteroSyncDialog } from "./ZoteroSyncDialog";
 import { useWorkspace } from "@/state/workspace";
 
 export function SourceList() {
   const { notebook, selectedIds, clearSelection } = useWorkspace();
   const [query, setQuery] = useState("");
   const [upload, setUpload] = useState(false);
+  const [zotero, setZotero] = useState(false);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,12 +60,16 @@ export function SourceList() {
         )}
       </div>
 
-      <div className="pt-3">
+      <div className="space-y-2 pt-3">
         <Button variant="outline" className="w-full justify-center" onClick={() => setUpload(true)}>
           <Plus className="size-4" /> Add sources
         </Button>
+        <Button variant="ghost" className="w-full justify-center" onClick={() => setZotero(true)}>
+          <Library className="size-4" /> Sync Zotero
+        </Button>
       </div>
       <UploadDialog open={upload} onOpenChange={setUpload} />
+      <ZoteroSyncDialog open={zotero} onOpenChange={setZotero} />
     </div>
   );
 }
