@@ -2,7 +2,7 @@
  * Core domain types and static research-action definitions.
  * The application ships with no preloaded notebooks, sources, or research
  * history — all content comes from the user (uploads, notes) or, later,
- * from a locally connected model via the research service.
+ * from Zotero or the Gemini-backed research service.
  */
 
 export type SourceKind = "pdf" | "txt" | "docx" | "csv";
