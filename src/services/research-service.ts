@@ -8,6 +8,8 @@
  */
 import type { AnswerBlock, CitationRef, ResearchEntry, Source } from "@/data/mock";
 import { askResearchQuestionFn, type ResearchPassage } from "@/lib/research.functions";
+import { askGeminiDirect } from "@/lib/gemini-client";
+import { hasGeminiKey } from "@/lib/gemini-settings";
 
 export interface ResearchRequest {
   question: string;
@@ -62,15 +64,22 @@ function extractPassages(req: ResearchRequest): ResearchPassage[] {
 }
 
 const geminiService: ResearchService = {
-  name: "gemini (Lovable AI gateway)",
+  name: "google gemini",
   async ask(req) {
-    const result = await askResearchQuestionFn({
-      data: {
-        question: req.question,
-        scopeLabel: req.scopeLabel,
-        passages: extractPassages(req),
-      },
-    });
+    const passages = extractPassages(req);
+    const result = hasGeminiKey()
+      ? await askGeminiDirect({
+          question: req.question,
+          scopeLabel: req.scopeLabel,
+          passages,
+        })
+      : await askResearchQuestionFn({
+          data: {
+            question: req.question,
+            scopeLabel: req.scopeLabel,
+            passages,
+          },
+        });
 
     if (result.error) {
       return {
