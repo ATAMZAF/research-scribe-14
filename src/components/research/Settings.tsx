@@ -26,6 +26,7 @@ import {
   saveZoteroSettings,
   type ZoteroSettings,
 } from "@/lib/zotero-settings";
+import { getEnvGeminiKey, loadGeminiKey, saveGeminiKey } from "@/lib/gemini-settings";
 
 type Theme = "light" | "dark";
 
@@ -48,10 +49,22 @@ export function Settings() {
   const { theme, setTheme } = useTheme();
   const [zotero, setZotero] = useState<ZoteroSettings>(emptyZoteroSettings);
   const [saved, setSaved] = useState(false);
+  const [geminiKey, setGeminiKey] = useState("");
+  const [keySaved, setKeySaved] = useState(false);
+  const envKey = getEnvGeminiKey();
+  const configured = envKey.length > 0 || geminiKey.trim().length > 0;
 
   useEffect(() => {
     setZotero(loadZoteroSettings());
+    setGeminiKey(loadGeminiKey());
   }, []);
+
+  const saveKey = () => {
+    saveGeminiKey(geminiKey);
+    setKeySaved(true);
+    setTimeout(() => setKeySaved(false), 2000);
+  };
+
 
   const save = () => {
     saveZoteroSettings({
@@ -144,13 +157,33 @@ export function Settings() {
 
         <Separator />
 
-        <div className="space-y-1">
-          <Label>Research model</Label>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Questions are answered by Google Gemini, using passages from the sources you have in
-            scope. Notes and documents stay in this workspace; only the passages needed to answer a
-            question are sent to the model.
-          </p>
+        <div className="space-y-3">
+          <div>
+            <Label>Gemini API key</Label>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Questions are answered by Google Gemini using passages from the sources in scope. Get
+              a key at aistudio.google.com/apikey. It stays on this device.
+              {envKey && " A key is already provided by the environment."}
+            </p>
+          </div>
+          {!envKey && (
+            <>
+              <Input
+                type="password"
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="Gemini API key"
+              />
+              <div className="flex items-center gap-3">
+                <Button size="sm" onClick={saveKey}>
+                  Save API key
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {keySaved ? "Saved" : configured ? "Configured" : "Not configured"}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
