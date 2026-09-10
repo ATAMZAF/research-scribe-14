@@ -2,14 +2,14 @@
  * Research service abstraction.
  *
  * This is the single seam between the UI and whatever answers research
- * questions. It is backed by Google Gemini through the Lovable AI gateway:
- * relevant passages from the in-scope sources are extracted here and sent to
- * the model as structured context with explicit citation instructions.
+ * questions. It is backed by Google Gemini called directly over REST with the
+ * user's own API key: relevant passages from the in-scope sources are
+ * extracted here and sent to the model as structured context with explicit
+ * citation instructions.
  */
 import type { AnswerBlock, CitationRef, ResearchEntry, Source } from "@/data/mock";
-import { askResearchQuestionFn, type ResearchPassage } from "@/lib/research.functions";
-import { askGeminiDirect } from "@/lib/gemini-client";
-import { hasGeminiKey } from "@/lib/gemini-settings";
+import type { ResearchPassage } from "@/lib/research.functions";
+import { askGeminiDirect, type GeminiRawBlock } from "@/lib/gemini-client";
 
 export interface ResearchRequest {
   question: string;
@@ -63,23 +63,31 @@ function extractPassages(req: ResearchRequest): ResearchPassage[] {
   return ranked.slice(0, MAX_PASSAGES).map(({ score: _score, ...p }) => p);
 }
 
+function toAnswerBlocks(blocks: GeminiRawBlock[]): AnswerBlock[] {
+  return blocks.map((b) => {
+    if (b.type === "table") {
+      return {
+        type: "table" as const,
+        headers: b.headers ?? [],
+        rows: (b.rows ?? []).map((r) => r.cells),
+      };
+    }
+    if (b.type === "bullets" || b.type === "numbered") {
+      return { type: b.type, items: b.items ?? [] };
+    }
+    return { type: b.type, text: b.text ?? "" };
+  });
+}
+
 const geminiService: ResearchService = {
   name: "google gemini",
   async ask(req) {
     const passages = extractPassages(req);
-    const result = hasGeminiKey()
-      ? await askGeminiDirect({
-          question: req.question,
-          scopeLabel: req.scopeLabel,
-          passages,
-        })
-      : await askResearchQuestionFn({
-          data: {
-            question: req.question,
-            scopeLabel: req.scopeLabel,
-            passages,
-          },
-        });
+    const result = await askGeminiDirect({
+      question: req.question,
+      scopeLabel: req.scopeLabel,
+      passages,
+    });
 
     if (result.error) {
       return {
@@ -89,8 +97,13 @@ const geminiService: ResearchService = {
     }
 
     return {
-      blocks: result.blocks as AnswerBlock[],
-      citations: result.citations as CitationRef[],
+      blocks: toAnswerBlocks(result.blocks),
+      citations: result.citations.map((c, i) => ({
+        id: `c${i + 1}`,
+        sourceId: c.sourceId,
+        page: c.page,
+        excerpt: c.excerpt,
+      })),
     };
   },
 };
@@ -108,7 +121,7 @@ export async function askResearchQuestion(req: ResearchRequest): Promise<Researc
     id: crypto.randomUUID(),
     question: req.question,
     scopeLabel: req.scopeLabel,
-    askedAt: "Just now",
+    askedAt: new Date().toISOString(),
     blocks,
     citations,
   };
