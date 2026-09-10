@@ -1,13 +1,17 @@
 import {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { type Note, type Notebook, type Source } from "@/data/mock";
 import { askResearchQuestion } from "@/services/research-service";
+import { loadWorkspace, saveWorkspace } from "@/lib/persistence";
+import { deletePdf } from "@/lib/pdf-store";
 import { WorkspaceContext, type Scope, type WorkspaceValue } from "./workspace-context";
+
 
 export type { Scope, WorkspaceValue };
 
