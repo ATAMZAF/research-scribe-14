@@ -193,7 +193,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           : [note, ...nb.notes],
       })),
     deleteNote: (id) => patch((nb) => ({ ...nb, notes: nb.notes.filter((n) => n.id !== id) })),
-    removeSource: (id) => patch((nb) => ({ ...nb, sources: nb.sources.filter((s) => s.id !== id) })),
+    removeSource: (id) => {
+      void deletePdf(id);
+      patch((nb) => ({ ...nb, sources: nb.sources.filter((s) => s.id !== id) }));
+    },
+
   };
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
