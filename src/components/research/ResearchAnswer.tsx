@@ -120,7 +120,7 @@ export function ResearchAnswer({ entry }: { entry: ResearchEntry }) {
     <article className="border-b border-border pb-8">
       <header className="mb-4">
         <p className="text-[11px] tracking-widest text-muted-foreground uppercase">
-          {entry.askedAt} · {entry.scopeLabel}
+          {formatAsked(entry.askedAt)} · {entry.scopeLabel}
         </p>
         <h2 className="mt-1.5 text-lg leading-snug font-semibold tracking-tight">
           {entry.question}
