@@ -17,8 +17,11 @@ export interface Source {
   kind: SourceKind;
   addedAt: string;
   excerpt: string;
-  /** Mock page-by-page text used by the source viewer. */
+  /** Page-by-page extracted text used by the source viewer and AI context. */
   pageText: string[];
+  /** True when the original PDF file is stored locally for this source. */
+  hasFile?: boolean;
+
 }
 
 export interface CitationRef {
