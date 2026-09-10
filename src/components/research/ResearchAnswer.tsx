@@ -11,6 +11,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+function formatAsked(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const mins = Math.round((Date.now() - date.getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 function useInline() {
   const lookup = useSourceLookup();
   return function Inline({ text, entry }: { text: string; entry: ResearchEntry }) {
