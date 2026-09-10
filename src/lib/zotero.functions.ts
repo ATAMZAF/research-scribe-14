@@ -125,3 +125,44 @@ export const fetchZoteroItems = createServerFn({ method: "POST" })
 
     return { error: null as string | null, items };
   });
+
+/**
+ * Locate a top-level item's PDF attachment and download the file itself.
+ * Returned as base64 so the browser can extract text and render the document.
+ */
+export const fetchZoteroPdf = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    credsSchema.extend({ itemKey: z.string().min(1) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const childRes = await zoteroFetch(data, `/items/${data.itemKey}/children`);
+    if (!childRes.ok)
+      return { error: errorFor(childRes.status), base64: null as string | null, fileName: null as string | null };
+
+    const children = (await childRes.json()) as {
+      key: string;
+      data: { itemType?: string; contentType?: string; filename?: string; title?: string; linkMode?: string };
+    }[];
+
+    const pdf = children.find(
+      (c) => c.data.itemType === "attachment" && c.data.contentType === "application/pdf",
+    );
+    if (!pdf)
+      return { error: "No PDF attachment is stored in Zotero for this item.", base64: null, fileName: null };
+
+    const fileRes = await zoteroFetch(data, `/items/${pdf.key}/file`);
+    if (!fileRes.ok)
+      return { error: errorFor(fileRes.status), base64: null, fileName: null };
+
+    const buffer = new Uint8Array(await fileRes.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < buffer.length; i += 8192) {
+      binary += String.fromCharCode(...buffer.subarray(i, i + 8192));
+    }
+
+    return {
+      error: null as string | null,
+      base64: btoa(binary),
+      fileName: pdf.data.filename ?? pdf.data.title ?? `${data.itemKey}.pdf`,
+    };
+  });

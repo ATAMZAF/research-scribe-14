@@ -11,6 +11,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+function formatAsked(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const mins = Math.round((Date.now() - date.getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 function useInline() {
   const lookup = useSourceLookup();
   return function Inline({ text, entry }: { text: string; entry: ResearchEntry }) {
@@ -120,7 +129,7 @@ export function ResearchAnswer({ entry }: { entry: ResearchEntry }) {
     <article className="border-b border-border pb-8">
       <header className="mb-4">
         <p className="text-[11px] tracking-widest text-muted-foreground uppercase">
-          {entry.askedAt} · {entry.scopeLabel}
+          {formatAsked(entry.askedAt)} · {entry.scopeLabel}
         </p>
         <h2 className="mt-1.5 text-lg leading-snug font-semibold tracking-tight">
           {entry.question}

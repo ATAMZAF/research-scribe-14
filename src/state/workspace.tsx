@@ -1,13 +1,17 @@
 import {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { type Note, type Notebook, type Source } from "@/data/mock";
 import { askResearchQuestion } from "@/services/research-service";
+import { loadWorkspace, saveWorkspace } from "@/lib/persistence";
+import { deletePdf } from "@/lib/pdf-store";
 import { WorkspaceContext, type Scope, type WorkspaceValue } from "./workspace-context";
+
 
 export type { Scope, WorkspaceValue };
 
@@ -30,6 +34,7 @@ const initialNotebook = blankNotebook();
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [notebooks, setNotebooks] = useState<Notebook[]>([initialNotebook]);
   const [notebookId, setNotebookId] = useState(initialNotebook.id);
+  const [hydrated, setHydrated] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scope, setScope] = useState<Scope>("all");
   const [openSource, setOpenSource] = useState<Source | null>(null);
@@ -38,6 +43,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<WorkspaceValue["activeCitation"]>(null);
 
+  // Restore the saved workspace after hydration, then keep saving on change.
+  useEffect(() => {
+    const saved = loadWorkspace();
+    if (saved) {
+      setNotebooks(saved.notebooks);
+      setNotebookId(
+        saved.notebooks.some((n) => n.id === saved.notebookId)
+          ? saved.notebookId
+          : saved.notebooks[0]!.id,
+      );
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) saveWorkspace({ notebooks, notebookId });
+  }, [hydrated, notebooks, notebookId]);
+
   const notebook = notebooks.find((n) => n.id === notebookId) ?? notebooks[0] ?? initialNotebook;
 
   const patch = useCallback(
@@ -45,6 +68,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setNotebooks((prev) => prev.map((n) => (n.id === notebookId ? fn(n) : n))),
     [notebookId],
   );
+
 
   const selected = notebook.sources.filter((s) => selectedIds.includes(s.id));
   const scopeSources =
@@ -169,7 +193,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           : [note, ...nb.notes],
       })),
     deleteNote: (id) => patch((nb) => ({ ...nb, notes: nb.notes.filter((n) => n.id !== id) })),
-    removeSource: (id) => patch((nb) => ({ ...nb, sources: nb.sources.filter((s) => s.id !== id) })),
+    removeSource: (id) => {
+      void deletePdf(id);
+      patch((nb) => ({ ...nb, sources: nb.sources.filter((s) => s.id !== id) }));
+    },
+
   };
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
