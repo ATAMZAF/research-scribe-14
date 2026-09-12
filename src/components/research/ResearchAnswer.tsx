@@ -33,12 +33,7 @@ function useInline() {
           const citation = entry.citations[idx - 1];
           if (!citation) return <Fragment key={i}>{part}</Fragment>;
           return (
-            <Citation
-              key={i}
-              index={idx}
-              citation={citation}
-              source={lookup[citation.sourceId]}
-            />
+            <Citation key={i} index={idx} citation={citation} source={lookup[citation.sourceId]} />
           );
         })}
       </>

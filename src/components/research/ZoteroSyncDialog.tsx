@@ -150,7 +150,6 @@ export function ZoteroSyncDialog({
     onOpenChange(false);
   };
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -203,9 +202,7 @@ export function ZoteroSyncDialog({
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
-            {importing && (
-              <p className="text-xs text-muted-foreground">{importLabel}</p>
-            )}
+            {importing && <p className="text-xs text-muted-foreground">{importLabel}</p>}
 
             <div className="max-h-80 min-h-40 space-y-1 overflow-y-auto rounded-md border border-border p-1">
               {loading && items.length === 0 && (

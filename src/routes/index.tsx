@@ -60,9 +60,7 @@ function Workspace() {
         <main className="min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-4xl px-5 py-6 lg:px-8">
             <h1 className="text-2xl font-semibold tracking-tight text-balance">{notebook.name}</h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-              {notebook.description}
-            </p>
+            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{notebook.description}</p>
             <p className="mt-2 text-xs text-muted-foreground">
               {notebook.sources.length} sources · {notebook.updatedLabel} · Scope: {scopeLabel}
             </p>

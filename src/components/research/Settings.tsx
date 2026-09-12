@@ -65,7 +65,6 @@ export function Settings() {
     setTimeout(() => setKeySaved(false), 2000);
   };
 
-
   const save = () => {
     saveZoteroSettings({
       libraryType: zotero.libraryType,

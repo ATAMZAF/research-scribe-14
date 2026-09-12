@@ -22,7 +22,6 @@ export function TopBar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
     };
   }, []);
 
-
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-3 lg:px-4">
       <Button
