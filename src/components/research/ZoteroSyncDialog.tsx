@@ -99,10 +99,52 @@ export function ZoteroSyncDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const importPicked = () => {
-    addSourceObjects(items.filter((i) => picked.includes(i.key)).map(toSource));
+  const importPicked = async () => {
+    const chosen = items.filter((i) => picked.includes(i.key));
+    const creds = loadZoteroSettings();
+    const payload = {
+      libraryType: creds.libraryType,
+      libraryId: creds.libraryId.trim(),
+      apiKey: creds.apiKey.trim(),
+    };
+
+    setImporting(true);
+    setError(null);
+    const built: Source[] = [];
+
+    for (const [index, ref] of chosen.entries()) {
+      setImportLabel(`Fetching ${index + 1} of ${chosen.length}: ${ref.title}`);
+      const source = toSource(ref);
+
+      if (ref.hasPdf) {
+        try {
+          const file = await fetchZoteroPdf({ data: { ...payload, itemKey: ref.key } });
+          if (file.base64) {
+            const bytes = base64ToBytes(file.base64);
+            const pages = await extractPdfPages(bytes);
+            if (pages.length) {
+              await savePdf(source.id, bytes);
+              source.pageText = pages;
+              source.pages = pages.length;
+              source.excerpt = (pages[0] ?? source.excerpt).slice(0, 240);
+              source.hasFile = true;
+              if (file.fileName) source.fileName = file.fileName;
+            }
+          }
+        } catch {
+          /* keep the metadata-only source when the file cannot be fetched */
+        }
+      }
+
+      built.push(source);
+    }
+
+    addSourceObjects(built);
+    setImporting(false);
+    setImportLabel("");
     onOpenChange(false);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
