@@ -22,7 +22,9 @@ export function SourceViewer() {
     if (source?.hasFile) {
       void loadPdf(source.id).then((bytes) => {
         if (!bytes || cancelled) return;
-        url = URL.createObjectURL(new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/pdf" }));
+        url = URL.createObjectURL(
+          new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/pdf" }),
+        );
         setFileUrl(url);
       });
     }
@@ -48,7 +50,8 @@ export function SourceViewer() {
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-semibold">{source.title}</h2>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {source.author} · {source.year} · {source.pages} pages · {source.kind.toUpperCase()}
+                  {source.author} · {source.year} · {source.pages} pages ·{" "}
+                  {source.kind.toUpperCase()}
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setScope("current")}>

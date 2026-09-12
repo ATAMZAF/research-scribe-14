@@ -18,7 +18,7 @@ export async function extractPdfPages(bytes: Uint8Array): Promise<string[]> {
       .trim();
     pages.push(text);
   }
-  await doc.destroy();
+  await doc.cleanup();
   return pages;
 }
 

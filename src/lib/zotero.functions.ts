@@ -58,7 +58,11 @@ export const fetchZoteroCollections = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const res = await zoteroFetch(data, "/collections?limit=100");
     if (!res.ok) return { error: errorFor(res.status), collections: [] as ZoteroCollection[] };
-    const raw = (await res.json()) as { key: string; data: { name: string }; meta?: { numItems?: number } }[];
+    const raw = (await res.json()) as {
+      key: string;
+      data: { name: string };
+      meta?: { numItems?: number };
+    }[];
     return {
       error: null as string | null,
       collections: raw.map((c) => ({
@@ -131,28 +135,39 @@ export const fetchZoteroItems = createServerFn({ method: "POST" })
  * Returned as base64 so the browser can extract text and render the document.
  */
 export const fetchZoteroPdf = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
-    credsSchema.extend({ itemKey: z.string().min(1) }).parse(data),
-  )
+  .inputValidator((data: unknown) => credsSchema.extend({ itemKey: z.string().min(1) }).parse(data))
   .handler(async ({ data }) => {
     const childRes = await zoteroFetch(data, `/items/${data.itemKey}/children`);
     if (!childRes.ok)
-      return { error: errorFor(childRes.status), base64: null as string | null, fileName: null as string | null };
+      return {
+        error: errorFor(childRes.status),
+        base64: null as string | null,
+        fileName: null as string | null,
+      };
 
     const children = (await childRes.json()) as {
       key: string;
-      data: { itemType?: string; contentType?: string; filename?: string; title?: string; linkMode?: string };
+      data: {
+        itemType?: string;
+        contentType?: string;
+        filename?: string;
+        title?: string;
+        linkMode?: string;
+      };
     }[];
 
     const pdf = children.find(
       (c) => c.data.itemType === "attachment" && c.data.contentType === "application/pdf",
     );
     if (!pdf)
-      return { error: "No PDF attachment is stored in Zotero for this item.", base64: null, fileName: null };
+      return {
+        error: "No PDF attachment is stored in Zotero for this item.",
+        base64: null,
+        fileName: null,
+      };
 
     const fileRes = await zoteroFetch(data, `/items/${pdf.key}/file`);
-    if (!fileRes.ok)
-      return { error: errorFor(fileRes.status), base64: null, fileName: null };
+    if (!fileRes.ok) return { error: errorFor(fileRes.status), base64: null, fileName: null };
 
     const buffer = new Uint8Array(await fileRes.arrayBuffer());
     let binary = "";

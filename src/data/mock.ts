@@ -21,7 +21,6 @@ export interface Source {
   pageText: string[];
   /** True when the original PDF file is stored locally for this source. */
   hasFile?: boolean;
-
 }
 
 export interface CitationRef {

@@ -125,7 +125,11 @@ export async function askGeminiDirect(input: {
       },
     );
   } catch {
-    return { error: "Could not reach Gemini. Check your connection and try again.", blocks: [], citations: [] };
+    return {
+      error: "Could not reach Gemini. Check your connection and try again.",
+      blocks: [],
+      citations: [],
+    };
   }
 
   if (!res.ok) {

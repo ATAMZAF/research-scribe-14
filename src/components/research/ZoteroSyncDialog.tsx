@@ -20,12 +20,15 @@ import {
 import {
   fetchZoteroCollections,
   fetchZoteroItems,
+  fetchZoteroPdf,
   type ZoteroCollection,
   type ZoteroReference,
 } from "@/lib/zotero.functions";
 import { hasZoteroCredentials, loadZoteroSettings } from "@/lib/zotero-settings";
 import { useWorkspace } from "@/state/workspace";
 import type { Source } from "@/data/mock";
+import { extractPdfPages, base64ToBytes } from "@/lib/pdf-text";
+import { savePdf } from "@/lib/pdf-store";
 
 function toSource(ref: ZoteroReference): Source {
   const body =
@@ -61,6 +64,8 @@ export function ZoteroSyncDialog({
   const [picked, setPicked] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importLabel, setImportLabel] = useState("");
 
   const settings = loadZoteroSettings();
   const configured = hasZoteroCredentials(settings);
@@ -99,8 +104,49 @@ export function ZoteroSyncDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const importPicked = () => {
-    addSourceObjects(items.filter((i) => picked.includes(i.key)).map(toSource));
+  const importPicked = async () => {
+    const chosen = items.filter((i) => picked.includes(i.key));
+    const creds = loadZoteroSettings();
+    const payload = {
+      libraryType: creds.libraryType,
+      libraryId: creds.libraryId.trim(),
+      apiKey: creds.apiKey.trim(),
+    };
+
+    setImporting(true);
+    setError(null);
+    const built: Source[] = [];
+
+    for (const [index, ref] of chosen.entries()) {
+      setImportLabel(`Fetching ${index + 1} of ${chosen.length}: ${ref.title}`);
+      const source = toSource(ref);
+
+      if (ref.hasPdf) {
+        try {
+          const file = await fetchZoteroPdf({ data: { ...payload, itemKey: ref.key } });
+          if (file.base64) {
+            const bytes = base64ToBytes(file.base64);
+            const pages = await extractPdfPages(bytes);
+            if (pages.length) {
+              await savePdf(source.id, bytes);
+              source.pageText = pages;
+              source.pages = pages.length;
+              source.excerpt = (pages[0] ?? source.excerpt).slice(0, 240);
+              source.hasFile = true;
+              if (file.fileName) source.fileName = file.fileName;
+            }
+          }
+        } catch {
+          /* keep the metadata-only source when the file cannot be fetched */
+        }
+      }
+
+      built.push(source);
+    }
+
+    addSourceObjects(built);
+    setImporting(false);
+    setImportLabel("");
     onOpenChange(false);
   };
 
@@ -156,6 +202,7 @@ export function ZoteroSyncDialog({
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {importing && <p className="text-xs text-muted-foreground">{importLabel}</p>}
 
             <div className="max-h-80 min-h-40 space-y-1 overflow-y-auto rounded-md border border-border p-1">
               {loading && items.length === 0 && (
@@ -198,8 +245,12 @@ export function ZoteroSyncDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={importPicked} disabled={!configured || picked.length === 0}>
-            Add {picked.length || ""} to notebook
+          <Button
+            onClick={() => void importPicked()}
+            disabled={!configured || picked.length === 0 || importing}
+          >
+            {importing ? <Loader2 className="size-4 animate-spin" /> : null}
+            {importing ? "Importing…" : `Add ${picked.length || ""} to notebook`}
           </Button>
         </DialogFooter>
       </DialogContent>
