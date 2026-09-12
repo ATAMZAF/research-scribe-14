@@ -2,10 +2,9 @@
  * Research service abstraction.
  *
  * This is the single seam between the UI and whatever answers research
- * questions. It is backed by Google Gemini called directly over REST with the
- * user's own API key: relevant passages from the in-scope sources are
- * extracted here and sent to the model as structured context with explicit
- * citation instructions.
+ * questions. It is backed by the native Lovable AI bridge: relevant passages
+ * from the in-scope sources are extracted here and sent to a server function
+ * that calls the model with explicit citation instructions.
  */
 import type { AnswerBlock, CitationRef, ResearchEntry, Source } from "@/data/mock";
 import type { ResearchPassage } from "@/lib/research.functions";
