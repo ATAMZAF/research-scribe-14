@@ -156,33 +156,12 @@ export function Settings() {
 
         <Separator />
 
-        <div className="space-y-3">
-          <div>
-            <Label>Gemini API key</Label>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Questions are answered by Google Gemini using passages from the sources in scope. Get
-              a key at aistudio.google.com/apikey. It stays on this device.
-              {envKey && " A key is already provided by the environment."}
-            </p>
-          </div>
-          {!envKey && (
-            <>
-              <Input
-                type="password"
-                value={geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)}
-                placeholder="Gemini API key"
-              />
-              <div className="flex items-center gap-3">
-                <Button size="sm" onClick={saveKey}>
-                  Save API key
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {keySaved ? "Saved" : configured ? "Configured" : "Not configured"}
-                </span>
-              </div>
-            </>
-          )}
+        <div className="space-y-1">
+          <Label>AI answers</Label>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Questions are answered by built-in AI using passages from the sources in scope. Nothing
+            to configure — no API key needed.
+          </p>
         </div>
       </DialogContent>
     </Dialog>
