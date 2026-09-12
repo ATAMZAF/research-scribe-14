@@ -1,26 +1,13 @@
-import { useEffect, useState } from "react";
 import { BookOpen, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Settings } from "./Settings";
 import { useWorkspace } from "@/state/workspace";
-import { hasGeminiKey } from "@/lib/gemini-settings";
-import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const { notebook } = useWorkspace();
-  const [keyReady, setKeyReady] = useState(false);
 
-  useEffect(() => {
-    const sync = () => setKeyReady(hasGeminiKey());
-    sync();
-    window.addEventListener("gemini-key-changed", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("gemini-key-changed", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-3 lg:px-4">
@@ -45,10 +32,8 @@ export function TopBar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
       </p>
       <div className="ml-auto flex items-center gap-1">
         <span className="mr-1 hidden items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground md:flex">
-          <span
-            className={cn("size-1.5 rounded-full", keyReady ? "bg-primary" : "bg-muted-foreground")}
-          />
-          {keyReady ? "Gemini" : "Gemini not configured"}
+        <span className="size-1.5 rounded-full bg-primary" />
+          AI ready
         </span>
         <Settings />
         <Avatar className="size-7">
