@@ -90,7 +90,7 @@ function Workspace() {
 
       <footer className="flex h-9 shrink-0 items-center justify-between border-t border-border bg-card px-4 text-[11px] text-muted-foreground">
         <span>{scopeLabel} in scope</span>
-        <span>Answers by Gemini · Zotero library sync</span>
+        <span>AI-powered answers · Zotero library sync</span>
       </footer>
 
       <SourceViewer />
