@@ -26,7 +26,7 @@ import {
   saveZoteroSettings,
   type ZoteroSettings,
 } from "@/lib/zotero-settings";
-import { getEnvGeminiKey, loadGeminiKey, saveGeminiKey } from "@/lib/gemini-settings";
+
 
 type Theme = "light" | "dark";
 
@@ -49,21 +49,12 @@ export function Settings() {
   const { theme, setTheme } = useTheme();
   const [zotero, setZotero] = useState<ZoteroSettings>(emptyZoteroSettings);
   const [saved, setSaved] = useState(false);
-  const [geminiKey, setGeminiKey] = useState("");
-  const [keySaved, setKeySaved] = useState(false);
-  const envKey = getEnvGeminiKey();
-  const configured = envKey.length > 0 || geminiKey.trim().length > 0;
 
   useEffect(() => {
     setZotero(loadZoteroSettings());
-    setGeminiKey(loadGeminiKey());
   }, []);
 
-  const saveKey = () => {
-    saveGeminiKey(geminiKey);
-    setKeySaved(true);
-    setTimeout(() => setKeySaved(false), 2000);
-  };
+
 
   const save = () => {
     saveZoteroSettings({
