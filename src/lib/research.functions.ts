@@ -103,13 +103,64 @@ function errorFor(status: number): string {
   return "The AI service could not answer right now.";
 }
 
+/** Parse the model's JSON answer, degrading to a plain paragraph. */
+function toPayload(text: string): ResearchAnswerPayload {
+  try {
+    const parsed = JSON.parse(text) as Omit<ResearchAnswerPayload, "error">;
+    return { error: null, blocks: parsed.blocks ?? [], citations: parsed.citations ?? [] };
+  } catch {
+    return {
+      error: null,
+      blocks: [{ type: "paragraph", text: text || "No answer was returned." }],
+      citations: [],
+    };
+  }
+}
+
+/**
+ * Local-dev fallback: call Google's Gemini REST API directly with GEMINI_API_KEY
+ * (or VITE_GEMINI_API_KEY) from the local .env when no Lovable key is present.
+ */
+async function askGeminiRest(
+  apiKey: string,
+  prompt: string,
+): Promise<ResearchAnswerPayload> {
+  const model = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" },
+        }),
+      },
+    );
+  } catch {
+    return { error: "Could not reach the AI service. Try again.", blocks: [], citations: [] };
+  }
+
+  if (!res.ok) {
+    return { error: errorFor(res.status), blocks: [], citations: [] };
+  }
+
+  const json = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+  return toPayload(text);
+}
+
 export const askResearch = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => askInputSchema.parse(data))
   .handler(async ({ data }): Promise<ResearchAnswerPayload> => {
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      return { error: "The AI service is not configured for this project.", blocks: [], citations: [] };
-    }
+    const apiKey = process.env["LOVABLE_API_KEY"] ?? process.env["VITE_LOVABLE_API_KEY"];
+    const geminiKey = process.env["GEMINI_API_KEY"] ?? process.env["VITE_GEMINI_API_KEY"];
+
 
     const context = data.passages.length
       ? data.passages
@@ -120,7 +171,20 @@ export const askResearch = createServerFn({ method: "POST" })
           .join("\n\n")
       : "(no source passages available)";
 
+    const prompt = `Scope: ${data.scopeLabel}\n\nCONTEXT:\n${context}\n\nQUESTION:\n${data.question}\n\nRespond with JSON matching: {"blocks":[{"type":"heading|paragraph|bullets|numbered|table","text":string|null,"items":string[]|null,"headers":string[]|null,"rows":[{"cells":string[]}]|null}],"citations":[{"sourceId":string,"page":number,"excerpt":string}]}`;
+
+    if (!apiKey) {
+      if (geminiKey) return askGeminiRest(geminiKey, prompt);
+      return {
+        error:
+          "The AI service is not configured. In the Lovable preview this works automatically; for local development add LOVABLE_API_KEY (or GEMINI_API_KEY) to a .env file and restart the dev server.",
+        blocks: [],
+        citations: [],
+      };
+    }
+
     let res: Response;
+
     try {
       res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
@@ -139,7 +203,7 @@ export const askResearch = createServerFn({ method: "POST" })
               content: [
                 {
                   type: "input_text",
-                  text: `Scope: ${data.scopeLabel}\n\nCONTEXT:\n${context}\n\nQUESTION:\n${data.question}`,
+                  text: prompt,
                 },
               ],
             },
@@ -196,14 +260,6 @@ export const askResearch = createServerFn({ method: "POST" })
       }
     }
 
-    try {
-      const parsed = JSON.parse(text) as Omit<ResearchAnswerPayload, "error">;
-      return { error: null, blocks: parsed.blocks ?? [], citations: parsed.citations ?? [] };
-    } catch {
-      return {
-        error: null,
-        blocks: [{ type: "paragraph", text: text || "No answer was returned." }],
-        citations: [],
-      };
-    }
+    return toPayload(text);
+
   });
