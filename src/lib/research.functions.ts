@@ -203,7 +203,7 @@ export const askResearch = createServerFn({ method: "POST" })
               content: [
                 {
                   type: "input_text",
-                  text: `Scope: ${data.scopeLabel}\n\nCONTEXT:\n${context}\n\nQUESTION:\n${data.question}`,
+                  text: prompt,
                 },
               ],
             },
