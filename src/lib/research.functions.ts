@@ -260,14 +260,6 @@ export const askResearch = createServerFn({ method: "POST" })
       }
     }
 
-    try {
-      const parsed = JSON.parse(text) as Omit<ResearchAnswerPayload, "error">;
-      return { error: null, blocks: parsed.blocks ?? [], citations: parsed.citations ?? [] };
-    } catch {
-      return {
-        error: null,
-        blocks: [{ type: "paragraph", text: text || "No answer was returned." }],
-        citations: [],
-      };
-    }
+    return toPayload(text);
+
   });
