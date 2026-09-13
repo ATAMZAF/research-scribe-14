@@ -171,7 +171,20 @@ export const askResearch = createServerFn({ method: "POST" })
           .join("\n\n")
       : "(no source passages available)";
 
+    const prompt = `Scope: ${data.scopeLabel}\n\nCONTEXT:\n${context}\n\nQUESTION:\n${data.question}\n\nRespond with JSON matching: {"blocks":[{"type":"heading|paragraph|bullets|numbered|table","text":string|null,"items":string[]|null,"headers":string[]|null,"rows":[{"cells":string[]}]|null}],"citations":[{"sourceId":string,"page":number,"excerpt":string}]}`;
+
+    if (!apiKey) {
+      if (geminiKey) return askGeminiRest(geminiKey, prompt);
+      return {
+        error:
+          "The AI service is not configured. In the Lovable preview this works automatically; for local development add LOVABLE_API_KEY (or GEMINI_API_KEY) to a .env file and restart the dev server.",
+        blocks: [],
+        citations: [],
+      };
+    }
+
     let res: Response;
+
     try {
       res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
